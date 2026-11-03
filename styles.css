@@ -540,3 +540,98 @@ input[type="text"]:focus {
     transition: none !important;
   }
 }
+
+/* ---------- 管理员 ---------- */
+.hero-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.admin-btn {
+  appearance: none;
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--muted);
+  font: inherit;
+  font-size: 13px;
+  padding: 7px 14px;
+  border-radius: 999px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+
+.admin-btn:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.admin-btn[data-active="true"] {
+  color: var(--ok);
+  border-color: color-mix(in srgb, var(--ok) 40%, var(--line));
+  background: var(--ok-soft);
+}
+
+.cell-actions {
+  white-space: nowrap;
+}
+
+.danger-btn {
+  appearance: none;
+  border: 1px solid color-mix(in srgb, var(--err) 40%, var(--line));
+  background: transparent;
+  color: var(--err);
+  font: inherit;
+  font-size: 12.5px;
+  padding: 4px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.danger-btn:hover:not(:disabled) {
+  background: var(--err-soft);
+}
+
+.danger-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.dialog {
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 0;
+  width: min(92vw, 400px);
+  background: var(--card);
+  color: var(--text);
+  box-shadow: 0 30px 80px -30px rgba(0, 0, 0, 0.5);
+}
+
+.dialog::backdrop {
+  background: rgba(15, 17, 23, 0.45);
+}
+
+.dialog form {
+  padding: 24px;
+}
+
+.dialog h2 {
+  margin: 0 0 6px;
+  font-size: 18px;
+}
+
+.dialog-sub {
+  margin: 0 0 18px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 8px;
+}

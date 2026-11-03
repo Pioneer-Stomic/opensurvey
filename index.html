@@ -11,7 +11,10 @@
 <body>
   <header class="hero">
     <div class="wrap">
-      <span class="hero-badge">学习问题反馈</span>
+      <div class="hero-head">
+        <span class="hero-badge">学习问题反馈</span>
+        <button id="admin-btn" class="admin-btn" type="button">管理员登录</button>
+      </div>
       <h1>学习问题反馈墙</h1>
       <p class="hero-sub">把现阶段的学习难点、课程困惑写下来，提交后会汇总到下方公示栏，供老师和同学一起看。</p>
     </div>
@@ -89,6 +92,7 @@
               <th scope="col">课程</th>
               <th scope="col">学习难点与课程困惑</th>
               <th scope="col">提交时间</th>
+              <th scope="col" id="admin-col" hidden>操作</th>
             </tr>
           </thead>
           <tbody id="board-body"></tbody>
@@ -107,6 +111,26 @@
   <footer class="wrap foot">
     <p>数据存储：<span id="mode-text">检测中…</span>　·　本页不收集除姓名与课程之外的个人信息。</p>
   </footer>
+
+  <dialog id="admin-dialog" class="dialog">
+    <form id="admin-form" novalidate>
+      <h2>管理员登录</h2>
+      <p class="dialog-sub">登录后可以在公示栏里删除反馈条目。</p>
+      <label class="field">
+        <span class="field-label">账号</span>
+        <input id="admin-user" type="text" autocomplete="username" required placeholder="管理员账号" />
+      </label>
+      <label class="field">
+        <span class="field-label">密码</span>
+        <input id="admin-pass" type="password" autocomplete="current-password" required placeholder="管理员密码" />
+      </label>
+      <p id="admin-error" class="message" role="alert" aria-live="polite"></p>
+      <div class="dialog-actions">
+        <button id="admin-cancel" class="btn btn--ghost" type="button">取消</button>
+        <button id="admin-submit" class="btn" type="submit">登录</button>
+      </div>
+    </form>
+  </dialog>
 
   <script src="./config.js"></script>
   <script type="module" src="./app.js"></script>

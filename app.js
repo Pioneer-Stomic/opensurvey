@@ -22,11 +22,21 @@ const els = {
   errorText: byId('board-error-text'),
   retry: byId('retry-btn'),
   modeText: byId('mode-text'),
+  adminBtn: byId('admin-btn'),
+  adminDialog: byId('admin-dialog'),
+  adminForm: byId('admin-form'),
+  adminUser: byId('admin-user'),
+  adminPass: byId('admin-pass'),
+  adminError: byId('admin-error'),
+  adminCancel: byId('admin-cancel'),
+  adminSubmit: byId('admin-submit'),
+  adminCol: byId('admin-col'),
 };
 
 const NAME_KEY = 'feedback-wall:name';
 const LAST_SUBMIT_KEY = 'feedback-wall:last-submit';
 const COOLDOWN_MS = 15000;
+const ADMIN_USER = 'Pioneer-Stomic';
 
 // GitHub Pages 上的旧地址已停用，访问时直接跳到正式地址（CloudBase 静态托管）
 const MIGRATION_HOSTS = {
@@ -48,6 +58,7 @@ const state = {
   sending: false,
   timer: null,
   messageTimer: null,
+  adminPassword: null,
 };
 
 function setStatus(text, tone) {
@@ -110,13 +121,26 @@ function renderRows() {
   const frag = document.createDocumentFragment();
   state.items.forEach((item, index) => {
     const tr = document.createElement('tr');
-    tr.append(
+    const cells = [
       makeCell(String(index + 1), '序号', 'cell-index'),
       makeCell(item.name || '—', '姓名', 'cell-name'),
       makeCell(item.course || '—', '课程', 'cell-course'),
       makeCell(item.content || '', '内容', 'cell-content'),
       makeCell(formatTime(item.createdAt), '时间', 'cell-time'),
-    );
+    ];
+    if (state.adminPassword) {
+      const actionCell = document.createElement('td');
+      actionCell.dataset.label = '操作';
+      actionCell.className = 'cell-actions';
+      const deleteBtn = document.createElement('button');
+      deleteBtn.type = 'button';
+      deleteBtn.className = 'danger-btn';
+      deleteBtn.textContent = '删除';
+      deleteBtn.addEventListener('click', () => onDelete(item, deleteBtn));
+      actionCell.append(deleteBtn);
+      cells.push(actionCell);
+    }
+    tr.append(...cells);
     frag.append(tr);
   });
   els.body.replaceChildren(frag);
@@ -224,6 +248,85 @@ async function onSubmit(event) {
   }
 }
 
+function showAdminError(text) {
+  els.adminError.textContent = text || '';
+  els.adminError.dataset.tone = text ? 'error' : '';
+}
+
+function openAdminDialog() {
+  if (!state.api) return;
+  els.adminUser.value = '';
+  els.adminPass.value = '';
+  showAdminError('');
+  if (typeof els.adminDialog.showModal === 'function') {
+    els.adminDialog.showModal();
+  } else {
+    els.adminDialog.setAttribute('open', '');
+  }
+  els.adminUser.focus();
+}
+
+function closeAdminDialog() {
+  if (typeof els.adminDialog.close === 'function') els.adminDialog.close();
+  else els.adminDialog.removeAttribute('open');
+}
+
+async function onAdminSubmit(event) {
+  event.preventDefault();
+  const user = els.adminUser.value.trim();
+  const pass = els.adminPass.value;
+  if (!user || !pass) {
+    showAdminError('请填写账号和密码');
+    return;
+  }
+  if (user !== ADMIN_USER) {
+    showAdminError('账号或密码不正确');
+    return;
+  }
+  els.adminSubmit.disabled = true;
+  els.adminSubmit.textContent = '登录中…';
+  try {
+    await state.api.adminVerify(pass);
+    state.adminPassword = pass;
+    closeAdminDialog();
+    setAdminMode(true);
+  } catch (err) {
+    showAdminError(err?.message || '登录失败，请稍后重试');
+  } finally {
+    els.adminSubmit.disabled = false;
+    els.adminSubmit.textContent = '登录';
+  }
+}
+
+function setAdminMode(on) {
+  if (!on) state.adminPassword = null;
+  els.adminCol.hidden = !on;
+  els.adminBtn.dataset.active = on ? 'true' : 'false';
+  els.adminBtn.textContent = on ? '退出管理员' : '管理员登录';
+  renderRows();
+}
+
+async function onDelete(item, button) {
+  if (!state.adminPassword) return;
+  const label = item.name || '匿名';
+  if (!window.confirm(`确定删除「${label}」的这条反馈吗？删除后不可恢复。`)) return;
+  button.disabled = true;
+  button.textContent = '删除中…';
+  try {
+    await state.api.adminDelete(item.id, state.adminPassword);
+    await loadFeedback({ silent: true });
+  } catch (err) {
+    if (err?.code === 'UNAUTHORIZED') {
+      setAdminMode(false);
+      showFormMessage('密码校验失败，已退出管理员模式。', 'error');
+    } else {
+      showFormMessage(err?.message || '删除失败，请稍后重试。', 'error');
+      button.disabled = false;
+      button.textContent = '删除';
+    }
+  }
+}
+
 function startPolling() {
   const interval = Math.max(10000, Number(cfg.pollMs) || 30000);
   clearInterval(state.timer);
@@ -269,6 +372,12 @@ async function init() {
   els.form.addEventListener('submit', onSubmit);
   els.refresh.addEventListener('click', () => loadFeedback());
   els.retry.addEventListener('click', () => loadFeedback());
+  els.adminBtn.addEventListener('click', () => {
+    if (state.adminPassword) setAdminMode(false);
+    else openAdminDialog();
+  });
+  els.adminCancel.addEventListener('click', closeAdminDialog);
+  els.adminForm.addEventListener('submit', onAdminSubmit);
 
   const savedName = localStorage.getItem(NAME_KEY);
   if (savedName && !els.name.value) els.name.value = savedName;
@@ -288,11 +397,13 @@ async function init() {
       els.submit.textContent = '暂不可提交';
       setStatus('SDK 加载失败', 'error');
       showBoardError(new Error('CloudBase SDK 加载失败：请检查网络后刷新页面。'));
+      els.adminBtn.hidden = true;
       return;
     }
   } else if (state.mode === 'local') {
     state.api = createApi({ mode: 'local', config: cfg });
   } else {
+    els.adminBtn.hidden = true;
     return;
   }
 

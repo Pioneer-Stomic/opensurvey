@@ -74,6 +74,12 @@ function createLocalApi(fetchImpl) {
       }
       return normalizeRow(data.item);
     },
+    async adminVerify(password) {
+      return adminRequest(fetchImpl, '/api/admin/verify', { password }, '账号或密码不正确');
+    },
+    async adminDelete(id, password) {
+      return adminRequest(fetchImpl, '/api/admin/delete', { id, password }, '删除失败');
+    },
   };
 }
 
@@ -133,7 +139,37 @@ function createCloudbaseApi({ config, sdk }) {
       const row = Array.isArray(res?.data) ? res.data[0] : res?.data;
       return normalizeRow(row || { ...checked.value, created_at: new Date().toISOString() });
     },
+    async adminVerify(password) {
+      const res = await callSdk(() => rdb().rpc('admin_verify', { admin_password: password }));
+      if (res?.error) throw mapCloudError(res.error);
+      return true;
+    },
+    async adminDelete(id, password) {
+      const res = await callSdk(() =>
+        rdb().rpc('admin_delete', { admin_password: password, target_id: Number(id) }),
+      );
+      if (res?.error) throw mapCloudError(res.error);
+      return true;
+    },
   };
+}
+
+async function adminRequest(fetchImpl, url, payload, fallbackMessage) {
+  let res;
+  try {
+    res = await fetchImpl(url, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+  } catch (err) {
+    throw new ApiError('网络异常，请稍后重试', { cause: err });
+  }
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new ApiError(data?.error?.message || fallbackMessage, { status: res.status });
+  }
+  return true;
 }
 
 async function callSdk(fn) {
@@ -155,6 +191,10 @@ function mapCloudError(err = {}) {
   const raw = String(err.message || '');
   const lower = raw.toLowerCase();
   let friendly = raw || '云端请求失败，请稍后重试';
+
+  if (lower.includes('unauthorized') || code === 'UNAUTHORIZED') {
+    return new ApiError('账号或密码不正确', { code: 'UNAUTHORIZED' });
+  }
 
   if (code === '42501' || lower.includes('permission denied')) {
     friendly = '数据库拒绝访问：请检查 feedback 表的 RLS 策略，以及 anon 角色的 GRANT 权限';
