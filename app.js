@@ -123,7 +123,7 @@ function renderRows() {
     const tr = document.createElement('tr');
     const cells = [
       makeCell(String(index + 1), '序号', 'cell-index'),
-      makeCell(item.name || '—', '姓名', 'cell-name'),
+      makeCell(item.name || '匿名', '姓名', 'cell-name'),
       makeCell(item.course || '—', '课程', 'cell-course'),
       makeCell(item.content || '', '内容', 'cell-content'),
       makeCell(formatTime(item.createdAt), '时间', 'cell-time'),
@@ -235,7 +235,7 @@ async function onSubmit(event) {
   try {
     await state.api.submit(checked.value);
     localStorage.setItem(LAST_SUBMIT_KEY, String(Date.now()));
-    localStorage.setItem(NAME_KEY, checked.value.name);
+    if (checked.value.name) localStorage.setItem(NAME_KEY, checked.value.name);
     els.content.value = '';
     updateCounter();
     showFormMessage('提交成功，已出现在下方公示栏。', 'success');

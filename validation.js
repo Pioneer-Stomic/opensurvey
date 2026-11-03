@@ -15,7 +15,6 @@ export function validateFeedback(input = {}) {
   const course = String(input.course ?? '').trim();
   const content = String(input.content ?? '').trim();
 
-  if (!name) return fail('name', '请填写姓名');
   if (name.length > LIMITS.nameMax) return fail('name', `姓名最多 ${LIMITS.nameMax} 个字`);
   if (course.length > LIMITS.courseMax) return fail('course', `课程名称最多 ${LIMITS.courseMax} 个字`);
   if (!content) return fail('content', '请填写学习难点或课程困惑');

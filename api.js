@@ -54,13 +54,14 @@ function createLocalApi(fetchImpl) {
     async submit(input) {
       const checked = validateFeedback(input);
       if (!checked.ok) throw new ApiError(checked.message, { field: checked.field });
+      const value = { ...checked.value, name: checked.value.name || '匿名' };
 
       let res;
       try {
         res = await fetchImpl('/api/feedback', {
           method: 'POST',
           headers: { 'content-type': 'application/json' },
-          body: JSON.stringify(checked.value),
+          body: JSON.stringify(value),
         });
       } catch (err) {
         throw new ApiError('网络异常，提交失败，请稍后重试', { cause: err });
@@ -128,7 +129,7 @@ function createCloudbaseApi({ config, sdk }) {
         rdb()
           .from(table)
           .insert({
-            name: checked.value.name,
+            name: checked.value.name || '匿名',
             course: checked.value.course,
             content: checked.value.content,
           })
