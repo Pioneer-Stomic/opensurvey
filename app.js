@@ -28,6 +28,12 @@ const NAME_KEY = 'feedback-wall:name';
 const LAST_SUBMIT_KEY = 'feedback-wall:last-submit';
 const COOLDOWN_MS = 15000;
 
+// GitHub Pages 上的旧地址已停用，访问时直接跳到正式地址（CloudBase 静态托管）
+const MIGRATION_HOSTS = {
+  'pioneer-stomic.github.io':
+    'https://pioneer-stomic-d9gvr5ztg66f4d931-1524448489.tcloudbaseapp.com/',
+};
+
 const MODE_TEXT = {
   local: '本机 JSON 文件（仅预览）',
   cloudbase: '腾讯云开发 CloudBase',
@@ -253,6 +259,12 @@ function loadSdk() {
 }
 
 async function init() {
+  const migrationTarget = MIGRATION_HOSTS[window.location.hostname];
+  if (migrationTarget) {
+    window.location.replace(migrationTarget);
+    return;
+  }
+
   els.content.addEventListener('input', updateCounter);
   els.form.addEventListener('submit', onSubmit);
   els.refresh.addEventListener('click', () => loadFeedback());
