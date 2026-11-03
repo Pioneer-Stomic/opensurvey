@@ -1,4 +1,4 @@
-import { validateFeedback } from './validation.js';
+import { validateFeedback } from './validation.js?v=20261103-230608';
 
 // CloudBase 官方 CDN（腾讯自建，国内可访问），UMD 包会挂到 window.cloudbase
 export const SDK_URL = 'https://static.cloudbase.net/cloudbase-js-sdk/3.11.0/cloudbase.full.js';

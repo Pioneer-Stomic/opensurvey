@@ -1,5 +1,5 @@
-import { validateFeedback } from './validation.js';
-import { createApi, resolveMode, SDK_URL } from './api.js';
+import { validateFeedback } from './validation.js?v=20261103-230608';
+import { createApi, resolveMode, SDK_URL } from './api.js?v=20261103-230608';
 
 const cfg = window.FEEDBACK_CONFIG || {};
 const byId = (id) => document.getElementById(id);
@@ -361,7 +361,15 @@ function loadSdk() {
   });
 }
 
+function showBuildId() {
+  const el = document.getElementById('build-text');
+  if (!el) return;
+  const build = new URL(import.meta.url).searchParams.get('v') || '';
+  el.textContent = !build || build === '20261103-230608' ? '本地开发' : build;
+}
+
 async function init() {
+  showBuildId();
   const migrationTarget = MIGRATION_HOSTS[window.location.hostname];
   if (migrationTarget) {
     window.location.replace(migrationTarget);
